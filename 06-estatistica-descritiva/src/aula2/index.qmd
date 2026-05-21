@@ -1,0 +1,239 @@
+---
+title: "Aula 2 - Estatística descritiva: medidas de dispersão"
+subtitle: Lições na linguagem R
+author:
+  - name: Luiz Antônio Gouveia de Oliveira
+    email: luiz.oliveira@df.senac.br
+    affiliation: 
+      - id: Faculdade SENAC DF
+        name: Faculdade SENAC DF
+date: last-modified
+date-format: "DD/MM/YYYY"
+format:
+  html:
+    code-fold: show
+    code-summary: "Ocultar/mostrar"
+    code-copy: true
+    number-sections: false
+    toc: true
+    toc-depth: 4
+    toc-location: left
+    toc-title: Sumário
+    title-block-banner: "#057bb4"
+    embed-resources: true
+    css: styles.css
+  pdf:
+    include-in-header: 
+      text: |
+execute:
+  warning: false
+  echo: true
+  eval: true
+  message: false
+editor: source
+editor_options: 
+  chunk_output_type: inline
+reference-location: margin
+---
+
+## Pacotes requeridos
+
+```{r}
+#| echo: true
+#| eval: true
+#| message: false
+#| warning: false
+
+
+# devtools::install_github("yutannihilation/ggsflabel")
+
+   # Testa se o pacote "pacman" está instalado. Se necessário, faz a instalação
+if (!require(pacman)) install.packages("pacman")
+
+pacman::p_load(tidyverse,   # Família de pacotes para manipulação de dados
+               kableExtra,
+               rmarkdown,
+               ggplot2,
+               tidyr)
+
+
+options(scipen = 999)
+
+```
+
+
+## 1. Carregamento e preparação dos dados
+Utilizaremos dois datasets nesta aula. O Dataset A traz dados de desempenho de alunos em três disciplinas. O Dataset B expande o conjunto de e-commerce da Aula 1 com informações adicionais de ticket por região.
+
+```{r setup_dados, echo=TRUE, eval=TRUE}
+# Carregando os datasets
+Aula2_DatasetA_notas <- read.csv("Aula2_DatasetA_notas.csv")
+Aula2_DatasetB_ticket_regiao <- read.csv("Aula2_DatasetB_ticket_regiao.csv")
+
+# Verificando a estrutura
+Aula2_DatasetA_notas
+Aula2_DatasetB_ticket_regiao
+
+# Verificando a estrutura
+str(Aula2_DatasetA_notas)
+str(Aula2_DatasetB_ticket_regiao)
+
+# Verificando os nomes das colunas
+names(Aula2_DatasetA_notas)
+names(Aula2_DatasetB_ticket_regiao)
+```
+
+
+## 2. Homogeneidade das notas por disciplina (Dataset A)
+Para cada uma das três disciplinas (Estatística, Programação e Visualização):
+
+2.1	Calcule a média, o desvio-padrão amostral e o CV.
+
+```{r eval=TRUE}
+names(Aula2_DatasetA_notas)
+
+# Média
+media_estatistica <- mean(Aula2_DatasetA_notas$estatistica)
+media_programacao <- mean(Aula2_DatasetA_notas$programacao)
+media_visualizacao <- mean(Aula2_DatasetA_notas$visualizacao)
+
+media_estatistica
+media_programacao
+media_visualizacao
+
+# Desvio-padrão
+
+dp_estatistica <- sd(Aula2_DatasetA_notas$estatistica)
+dp_programacao <- sd(Aula2_DatasetA_notas$programacao)
+dp_visualizacao <- sd(Aula2_DatasetA_notas$visualizacao)
+
+dp_estatistica
+dp_programacao
+dp_visualizacao
+
+# Coeficiente de variação
+
+cv_estatistica <- dp_estatistica / media_estatistica * 100
+cv_programacao <- dp_programacao / media_programacao * 100
+cv_visualizacao <- dp_visualizacao / media_visualizacao * 100
+
+cv_estatistica
+cv_programacao
+cv_visualizacao
+
+# Amplitude
+amplitude_estatistica <- max(Aula2_DatasetA_notas$estatistica) - min(Aula2_DatasetA_notas$estatistica)
+amplitude_programacao <- max(Aula2_DatasetA_notas$programacao) - min(Aula2_DatasetA_notas$programacao)
+amplitude_visualizacao <- max(Aula2_DatasetA_notas$visualizacao) - min(Aula2_DatasetA_notas$visualizacao)
+
+amplitude_estatistica
+amplitude_programacao
+amplitude_visualizacao
+
+# Variancia
+
+variancia_estatistica <- var(Aula2_DatasetA_notas$estatistica)
+variancia_programacao <- var(Aula2_DatasetA_notas$programacao)
+variancia_visualizacao <- var(Aula2_DatasetA_notas$visualizacao)
+
+variancia_estatistica
+variancia_programacao
+variancia_visualizacao
+
+resultado_2_1 <- data.frame(
+  disciplina = c("Estatística", "Programação", "Visualização"),
+  media = c(media_estatistica, media_programacao, media_visualizacao),
+  desvio_padrao = c(dp_estatistica, dp_programacao, dp_visualizacao),
+  coeficiente_variacao = c(cv_estatistica, cv_programacao, cv_visualizacao),
+  amplitude = c(amplitude_estatistica, amplitude_programacao, amplitude_visualizacao),
+  variancia = c(variancia_estatistica, variancia_programacao, variancia_visualizacao)
+)
+
+resultado_2_1
+
+z_programacao <- (9.5 - media_programacao) / dp_programacao
+round(z_programacao, 2)
+
+```
+
+2.2	Qual disciplina apresenta maior variabilidade nas notas? E a menor?
+R: Programação tem a maior dispersão, e estatística tem a menor.
+
+2.3	Em qual disciplina o desempenho dos alunos e mais homogêneo?
+R: Estatística, pois apresenta as menores medidas de dispersão (menor variância, menor desvio padrão e menor cv).
+
+2.4	Um aluno tirou 9,5 em Programação. Quantos desvios-padrão ele esta acima da média? Isso é um resultado incomum?
+R: Aproximadamente 1.09 desvio padrão acima da média. Não, é acima da média, mas apenas aproximadamente 1.09.
+
+
+## 3. Dispersao do ticket por regiao (Dataset B)
+
+Para cada regiao do Dataset B:
+
+3.1	Calcule a média, a mediana e o desvio-padrão do ticket médio.
+
+
+```{r eval=TRUE}
+names(Aula2_DatasetB_ticket_regiao)
+
+media_ticket <- mean(Aula2_DatasetB_ticket_regiao$ticket)
+media_ticket
+
+
+
+
+
+
+```
+
+3.2	Calcule o CV de cada região. Classifique a variabilidade (baixa, moderada, alta).
+
+```{r eval=TRUE}
+
+
+
+
+
+
+
+
+```
+
+
+3.3	Qual região tem o maior CV? O que isso indica sobre o comportamento das vendas nessa região?
+
+
+
+
+3.4	Remova o outlier (B12). Recalcule média, desvio-padrão e CV do Sudeste. O quanto o outlier distorcia os resultados?
+
+```{r eval=TRUE}
+
+
+
+
+
+
+
+
+```
+
+
+
+
+## 4. Comparação entre regiões e disciplinas
+
+Usando o CV como critério de comparação:
+
+4.1 É possível comparar diretamente o CV das notas (Dataset A) com o CV dos tickets (Dataset B)? Por que?
+
+
+
+4.2	Liste todas as variáveis analisadas em ordem crescente de CV. O que esse ranking revela?
+
+
+
+
+
+
+
